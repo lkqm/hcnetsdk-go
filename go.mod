@@ -1,3 +1,3 @@
-module github.com/lkqm/hcnetsdk
+module github.com/lkqm/hcnetsdk-go
 
 go 1.15

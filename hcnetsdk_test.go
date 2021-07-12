@@ -3,7 +3,6 @@ package hcnetsdk
 import (
 	"bytes"
 	"fmt"
-	"github.com/lkqm/hcnetsdk/model"
 	"io"
 	"io/ioutil"
 	"os"
@@ -18,7 +17,7 @@ func TestLogin(t *testing.T) {
 }
 
 func TestDoAction(t *testing.T) {
-	_, err := DoAction(testDevice1.host, testDevice1.username, testDevice1.password, func(userId int) (interface{}, *model.HcnetsdkError) {
+	_, err := DoAction(testDevice1.ip, testDevice1.port, testDevice1.username, testDevice1.password, func(userId int) (interface{}, error) {
 		return IsOnline(userId), nil
 	})
 	if err != nil {
@@ -67,7 +66,7 @@ func TestSetupDeploy(t *testing.T) {
 	time.Sleep(120 * time.Second)
 }
 
-func testMessageCallBack(lCommand uint32, pAlarmer *model.NetDvrAlarmer, pAlarmInfo []byte, pUserData unsafe.Pointer) int32 {
+func testMessageCallBack(lCommand uint32, pAlarmer *NetDvrAlarmer, pAlarmInfo []byte, pUserData unsafe.Pointer) int32 {
 	if lCommand == 4370 {
 		print(pAlarmer)
 	}

@@ -28,9 +28,6 @@ void FRealDataCallBackCgo(LONG lPlayHandle, DWORD dwDataType, BYTE *pBuffer, DWO
 import "C"
 import (
 	"fmt"
-	"github.com/lkqm/hcnetsdk/model"
-	"strconv"
-	"strings"
 	"time"
 	"unsafe"
 )
@@ -50,17 +47,7 @@ func Close() {
 }
 
 // 登录设备
-func Login(host string, username string, password string) (int, *model.HcnetsdkError) {
-	hostPair := strings.SplitN(host, ":", 2)
-	ip := hostPair[0]
-	port := 8000
-	if len(hostPair) > 1 {
-		thePort, err := strconv.Atoi(hostPair[1])
-		if err != nil {
-			port = thePort
-		}
-	}
-
+func Login(ip string, port int, username string, password string) (int, error) {
 	cIp := C.CString(ip)
 	defer C.free(unsafe.Pointer(cIp))
 	cUsername := C.CString(username)
@@ -77,7 +64,7 @@ func Login(host string, username string, password string) (int, *model.HcnetsdkE
 }
 
 // 注销登录
-func Logout(userId int) *model.HcnetsdkError {
+func Logout(userId int) error {
 	if userId > -1 {
 		cResult := C.NET_DVR_Logout(C.LONG(userId))
 		if cResult != 1 {
@@ -88,7 +75,7 @@ func Logout(userId int) *model.HcnetsdkError {
 }
 
 // 获取错误信息
-func LastError() *model.HcnetsdkError {
+func LastError() error {
 	cCode := C.NET_DVR_GetLastError()
 	if cCode == 0 {
 		return nil
@@ -102,12 +89,12 @@ func LastError() *model.HcnetsdkError {
 		cText := C.NET_DVR_GetErrorMsg(&cCode2)
 		text = C.GoString(cText)
 	}
-	return model.NewHcnetsdkError(int(cCode), text)
+	return NewHcnetsdkError(int(cCode), text)
 }
 
 // 执行操作
-func DoAction(host string, username string, password string, action func(int) (interface{}, *model.HcnetsdkError)) (interface{}, *model.HcnetsdkError) {
-	userId, err := Login(host, username, password)
+func DoAction(ip string, port int, username string, password string, action func(int) (interface{}, error)) (interface{}, error) {
+	userId, err := Login(ip, port, username, password)
 	if err != nil {
 		return nil, err
 	}
@@ -116,8 +103,8 @@ func DoAction(host string, username string, password string, action func(int) (i
 }
 
 // 设备布防
-func SetupDeploy(userId int, callback MSGCallBackFunc, exceptionCallback FExceptionCallBackFunc) (int, *model.HcnetsdkError) {
-	messageCallBackHooks[userId] = callback
+func SetupDeploy(userId int, messageCallback MessageCallBack, exceptionCallback ExceptionCallBack) (int, error) {
+	messageCallBackHooks[userId] = messageCallback
 	cUserId := C.LONG(userId)
 	cResult := C.NET_DVR_SetDVRMessageCallBack_V30(C.MSGCallBack(C.MSGCallBackCgo), nil)
 	if cResult != 1 {
@@ -141,7 +128,7 @@ func SetupDeploy(userId int, callback MSGCallBackFunc, exceptionCallback FExcept
 }
 
 // 视频实时播放
-func RealPlay(userId int, callback FRealDataCallBackFunc) (int, *model.HcnetsdkError) {
+func RealPlay(userId int, callback RealDataCallBack) (int, error) {
 	realDataCallBackHooks[userId] = callback
 
 	previewInfo := &C.NET_DVR_PREVIEWINFO{}
@@ -160,7 +147,7 @@ func RealPlay(userId int, callback FRealDataCallBackFunc) (int, *model.HcnetsdkE
 }
 
 // 停止视频流播放
-func StopRealPlay(handle int) (bool, *model.HcnetsdkError) {
+func StopRealPlay(handle int) (bool, error) {
 	cResult := C.NET_DVR_StopRealPlay(C.LONG(handle))
 	if cResult != 1 {
 		return false, LastError()
@@ -169,7 +156,7 @@ func StopRealPlay(handle int) (bool, *model.HcnetsdkError) {
 }
 
 // 获取设备DvrConfig
-func GetDvrConfig(userId int, channel int32, command int64, buffer unsafe.Pointer, bufferSize int) *model.HcnetsdkError {
+func GetDvrConfig(userId int, channel int32, command int64, buffer unsafe.Pointer, bufferSize int) error {
 	lUserID := C.LONG(userId)
 	dwCommand := C.DWORD(command)
 	lChannel := C.LONG(channel)
@@ -184,7 +171,7 @@ func GetDvrConfig(userId int, channel int32, command int64, buffer unsafe.Pointe
 }
 
 // 设置设备DvrConfig
-func SetDvrConfig(userId int, channel int32, command int64, buffer unsafe.Pointer) *model.HcnetsdkError {
+func SetDvrConfig(userId int, channel int32, command int64, buffer unsafe.Pointer) error {
 	lUserID := C.LONG(userId)
 	dwCommand := C.DWORD(command)
 	lChannel := C.LONG(channel)
@@ -198,7 +185,7 @@ func SetDvrConfig(userId int, channel int32, command int64, buffer unsafe.Pointe
 }
 
 // ISAPI协议透传
-func PassThrough(userId int, url string, data string) (*model.PassThroughResponse, *model.HcnetsdkError) {
+func PassThrough(userId int, url string, data string) (*PassThroughResponse, error) {
 	// 输入
 	var configInput = C.NET_DVR_XML_CONFIG_INPUT{}
 	urlBytes := []byte(url)
@@ -237,7 +224,7 @@ func IsOnline(userId int) bool {
 }
 
 // 重启设备
-func Reboot(userId int) *model.HcnetsdkError {
+func Reboot(userId int) error {
 	cResult := C.NET_DVR_RebootDVR(C.LONG(userId))
 	if cResult != 1 {
 		return LastError()
@@ -246,7 +233,7 @@ func Reboot(userId int) *model.HcnetsdkError {
 }
 
 // 设置设备时间
-func GetDeviceTime(userId int) (*time.Time, *model.HcnetsdkError) {
+func GetDeviceTime(userId int) (*time.Time, error) {
 	netDvrTime := C.NET_DVR_TIME{}
 	err := GetDvrConfig(userId, 0, 118, unsafe.Pointer(&netDvrTime), int(unsafe.Sizeof(netDvrTime)))
 	if err != nil {
@@ -266,7 +253,7 @@ func GetDeviceTime(userId int) (*time.Time, *model.HcnetsdkError) {
 }
 
 // 设置设备时间
-func SetDeviceTime(userId int, date time.Time) *model.HcnetsdkError {
+func SetDeviceTime(userId int, date time.Time) error {
 	netDvrTime := C.NET_DVR_TIME{}
 	netDvrTime.dwYear = C.DWORD(date.Year())
 	netDvrTime.dwMonth = C.DWORD(date.Month())
@@ -282,7 +269,7 @@ func SetDeviceTime(userId int, date time.Time) *model.HcnetsdkError {
 }
 
 // 修改密码
-func ModifyPassword(userId int, username string, newPassword string) *model.HcnetsdkError {
+func ModifyPassword(userId int, username string, newPassword string) error {
 	// 获取原始配置
 	cDvrUsers := C.NET_DVR_USER_V30{}
 	err := GetDvrConfig(userId, 0, 1006, unsafe.Pointer(&cDvrUsers), int(unsafe.Sizeof(cDvrUsers)))
@@ -318,7 +305,7 @@ func GetSdkVersion() string {
 }
 
 // 设置sdk的日志文件
-func SetSdkLogToFile(level int, logDir string, autoDelete bool) *model.HcnetsdkError {
+func SetSdkLogToFile(level int, logDir string, autoDelete bool) error {
 	cLogDir := C.CString(logDir)
 	defer C.free(unsafe.Pointer(&cLogDir))
 	cResult := C.NET_DVR_SetLogToFile(C.DWORD(level), cLogDir, C.BOOL(boolIntValue(autoDelete)))
@@ -329,8 +316,8 @@ func SetSdkLogToFile(level int, logDir string, autoDelete bool) *model.HcnetsdkE
 }
 
 // 同步升级设备DVR
-func UpgradeDvrSync(userId int, sdkFilePath string) (*model.UpgradeResponse, *model.HcnetsdkError) {
-	param := &model.DvrUpgradeParam{
+func UpgradeDvrSync(userId int, sdkFilePath string) (*UpgradeResponse, error) {
+	param := &DvrUpgradeParam{
 		UpgradeType: 0,
 		Filename:    sdkFilePath,
 	}
@@ -338,7 +325,7 @@ func UpgradeDvrSync(userId int, sdkFilePath string) (*model.UpgradeResponse, *mo
 }
 
 // 同步升级设备
-func UpgradeSync(userId int, upgradeParam *model.DvrUpgradeParam) (*model.UpgradeResponse, *model.HcnetsdkError) {
+func UpgradeSync(userId int, upgradeParam *DvrUpgradeParam) (*UpgradeResponse, error) {
 	// 请求升级
 	sFilename := C.CString(upgradeParam.Filename)
 	defer C.free(unsafe.Pointer(&sFilename))
@@ -367,7 +354,7 @@ func UpgradeSync(userId int, upgradeParam *model.DvrUpgradeParam) (*model.Upgrad
 			errorTimes = 0
 		}
 	}
-	response := &model.UpgradeResponse{
+	response := &UpgradeResponse{
 		Handle: handle,
 		State:  state,
 	}

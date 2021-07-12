@@ -1,6 +1,8 @@
-package model
+package hcnetsdk
 
+//
 // 保持go数据类型和c类型映射一致
+//
 
 //==================公共==================//
 // 坐标
@@ -33,22 +35,22 @@ type NetDvrIpAddr struct {
 }
 
 // 日期
-type NetDvrDate struct{
-	WYear uint16
+type NetDvrDate struct {
+	WYear   uint16
 	ByMonth byte
-	ByDay byte
+	ByDay   byte
 }
 
 // 时间
-type NetDvrTimeV30 struct{
-	WYear uint16
-	ByMonth byte
-	ByDay byte
-	ByHour  byte
-	ByMinute byte
-	BySecond byte
-	ByISO8601 byte
-	WMilliSec  uint16
+type NetDvrTimeV30 struct {
+	WYear            uint16
+	ByMonth          byte
+	ByDay            byte
+	ByHour           byte
+	ByMinute         byte
+	BySecond         byte
+	ByISO8601        byte
+	WMilliSec        uint16
 	CTimeDifferenceH uint8
 	CTimeDifferenceM uint8
 }
@@ -130,46 +132,46 @@ type NetVcaHumanFeature struct {
 }
 
 // 刷证回调信息
-type NetDvrIdCardInfoAlarm struct{
-	DwSize uint32
-	StruIDCardCfg NetDvrIdCardInfo
-	DwMajor uint32
-	DwMinor uint32
-	StruSwipeTime NetDvrTimeV30
-	ByNetUser[16] byte
-	StruRemoteHostAddr NetDvrIpAddr
-	DwCardReaderNo uint32
-	DwDoorNo uint32
-	DwPicDataLen uint32
-	PPicData *byte
-	ByCardType byte
-	ByDeviceNo byte
-	ByMask byte
-	ByRes2 byte
-	DwFingerPrintDataLen uint32
-	PFingerPrintData *byte
-	DwCapturePicDataLen uint32
-	PCapturePicData *byte
+type NetDvrIdCardInfoAlarm struct {
+	DwSize                  uint32
+	StruIDCardCfg           NetDvrIdCardInfo
+	DwMajor                 uint32
+	DwMinor                 uint32
+	StruSwipeTime           NetDvrTimeV30
+	ByNetUser               [16]byte
+	StruRemoteHostAddr      NetDvrIpAddr
+	DwCardReaderNo          uint32
+	DwDoorNo                uint32
+	DwPicDataLen            uint32
+	PPicData                *byte
+	ByCardType              byte
+	ByDeviceNo              byte
+	ByMask                  byte
+	ByRes2                  byte
+	DwFingerPrintDataLen    uint32
+	PFingerPrintData        *byte
+	DwCapturePicDataLen     uint32
+	PCapturePicData         *byte
 	DwCertificatePicDataLen uint32
-	PCertificatePicData *byte
-	ByCardReaderKind byte
-	ByRes3 [2]byte
-	ByIDCardInfoExtend byte
-	PIDCardInfoExtend *byte
-	ByRes [172]byte
+	PCertificatePicData     *byte
+	ByCardReaderKind        byte
+	ByRes3                  [2]byte
+	ByIDCardInfoExtend      byte
+	PIDCardInfoExtend       *byte
+	ByRes                   [172]byte
 }
 
 type NetDvrIdCardInfo struct {
-	DwSize uint32
-	ByName [128] byte
-	StruBirth NetDvrDate
-	ByAddr [280] byte
-	ByIDNum [32] byte
-	ByIssuingAuthority [128] byte
-	StruStartDate NetDvrDate
-	StruEndDate NetDvrDate
-	ByTermOfValidity byte
-	BySex byte
-	ByNation byte
-	ByRes [101] byte
+	DwSize             uint32
+	ByName             [128]byte
+	StruBirth          NetDvrDate
+	ByAddr             [280]byte
+	ByIDNum            [32]byte
+	ByIssuingAuthority [128]byte
+	StruStartDate      NetDvrDate
+	StruEndDate        NetDvrDate
+	ByTermOfValidity   byte
+	BySex              byte
+	ByNation           byte
+	ByRes              [101]byte
 }

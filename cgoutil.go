@@ -14,29 +14,23 @@ import (
 	"unsafe"
 )
 
-// cgo复制C.BYTE切片数组
-func cgoCopyBytesByCBytes(cBytes []C.BYTE) []byte {
-	return C.GoBytes(unsafe.Pointer(&cBytes[0]), C.int(len(cBytes)))
-}
-
-func cgoCopyBytesByCBytePointer(pointer *C.BYTE, len int) []byte {
-	return C.GoBytes(unsafe.Pointer(pointer), C.int(len))
-}
-
-// cgo复制C.BYTE切片数组
-func cgoCopyBytesByCChars(cBytes []C.char) []byte {
-	return C.GoBytes(unsafe.Pointer(&cBytes[0]), C.int(len(cBytes)))
-}
-
-// cgo转换C.BYTE数组到字符串, 自动去除末尾0字节
-func cgoConvertCBytesToString(cBytes []C.BYTE) string {
-	bytes := cgoCopyBytesByCBytes(cBytes)
+func newString(bytes []byte) string {
 	return strings.TrimRight(string(bytes), string(rune(0)))
 }
 
+// cgo复制C.BYTE切片数组
+func cgoCopyBytesByCBytes(bytes []C.byte) []byte {
+	return C.GoBytes(unsafe.Pointer(&bytes[0]), C.int(len(bytes)))
+}
+
+// cgo转换C.BYTE数组到字符串, 自动去除末尾0字节
+func cgoConvertCBytesToString(bytes []C.byte) string {
+	return strings.TrimRight(string(cgoCopyBytesByCBytes(bytes)), string(rune(0)))
+}
+
 // 布尔值代表的数字
-func boolIntValue(condition bool) int {
-	if condition {
+func boolIntValue(value bool) int {
+	if value {
 		return 1
 	}
 	return 0

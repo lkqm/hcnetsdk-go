@@ -1,7 +1,6 @@
-package model
+package hcnetsdk
 
 import (
-	"strings"
 	"unsafe"
 )
 
@@ -9,7 +8,7 @@ import (
  * 设备信息
  */
 type DeviceInfo struct {
-	UserId       int  // 登录Id
+	UserId       int    // 登录Id
 	Ip           string // 设备ip
 	DeviceName   string // 设备名称
 	SerialNumber string // 设备序列号
@@ -61,8 +60,4 @@ type DvrUpgradeParam struct {
 type UpgradeResponse struct {
 	Handle int64 // 升级句柄
 	State  int   // 升级状态
-}
-
-func newString(bytes []byte) string {
-	return strings.TrimRight(string(bytes), string(rune(0)))
 }

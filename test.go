@@ -1,20 +1,20 @@
 package hcnetsdk
 
 import (
-	"github.com/lkqm/hcnetsdk/model"
 	"testing"
 )
 
 type deviceInfo struct {
-	host     string
+	ip       string
+	port     int
 	username string
 	password string
 }
 
-var testDevice1 = &deviceInfo{host: "192.168.0.199", username: "admin", password: "kjl442333"}
+var testDevice1 = &deviceInfo{ip: "192.168.0.199", port: 8000, username: "admin", password: "jl442333"}
 
-func testBeforeLogin(t *testing.T) (int, *model.HcnetsdkError) {
-	userId, err := Login(testDevice1.host, testDevice1.username, testDevice1.password)
+func testBeforeLogin(t *testing.T) (int, error) {
+	userId, err := Login(testDevice1.ip, testDevice1.port, testDevice1.username, testDevice1.password)
 	if err != nil {
 		t.Errorf("登录失败: %s", err)
 	} else if userId < 0 {
