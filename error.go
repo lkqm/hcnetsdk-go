@@ -5,14 +5,15 @@ import (
 	"strconv"
 )
 
+// 构造HcnetError
+func NewHcnetError(code int, msg string) *HcnetError {
+	return &HcnetError{Code: code, Msg: msg}
+}
+
 // 海康网络sdk自定义错误
 type HcnetError struct {
 	Code int    `json:"Code"` // 错误码
 	Msg  string `json:"Msg"`  // 错误码描述
-}
-
-func NewHcnetsdkError(code int, msg string) *HcnetError {
-	return &HcnetError{Code: code, Msg: msg}
 }
 
 func (p *HcnetError) Error() string {

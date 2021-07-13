@@ -8,7 +8,6 @@ import (
 	"os"
 	"testing"
 	"time"
-	"unsafe"
 )
 
 func TestLogin(t *testing.T) {
@@ -49,12 +48,12 @@ func TestIsOnline(t *testing.T) {
 	}
 }
 
-func TestSetupDeploy(t *testing.T) {
+func TestSetupAlarm(t *testing.T) {
 	userId, err := testBeforeLogin(t)
 	if err != nil {
 		return
 	}
-	handle, err := SetupDeploy(userId, testMessageCallBack, testExceptionCallBack)
+	handle, err := SetupAlarm(userId, testMessageCallBack, testExceptionCallBack, 1)
 	if err != nil {
 		t.Errorf("布防失败：%s", err)
 		return
@@ -66,14 +65,14 @@ func TestSetupDeploy(t *testing.T) {
 	time.Sleep(120 * time.Second)
 }
 
-func testMessageCallBack(lCommand uint32, pAlarmer *NetDvrAlarmer, pAlarmInfo []byte, pUserData unsafe.Pointer) int32 {
+func testMessageCallBack(lCommand uint32, pAlarmer *NetDvrAlarmer, pAlarmInfo []byte, pUserData interface{}) int32 {
 	if lCommand == 4370 {
 		print(pAlarmer)
 	}
 	return 1
 }
 
-func testExceptionCallBack(dwType uint32, lUserID int32, lHandle int32, pUser unsafe.Pointer) {
+func testExceptionCallBack(dwType uint32, lUserID int32, lHandle int32, pUser interface{}) {
 	fmt.Print(lUserID)
 }
 
@@ -82,7 +81,7 @@ func TestRealPlay(t *testing.T) {
 	if err != nil {
 		return
 	}
-	handle, err := RealPlay(userId, testRealDataCallBack)
+	handle, err := RealPlay(userId, testRealDataCallBack, 1000)
 	if err != nil {
 		t.Errorf("设置实时流回调：%s", err)
 		return
@@ -97,7 +96,7 @@ func TestRealPlay(t *testing.T) {
 
 var testVideoHeaderBytes []byte // 视频头信息
 
-func testRealDataCallBack(lPlayHandle int32, dwDataType uint32, pbuffer []byte, dwBufSize uint32, pUser unsafe.Pointer) {
+func testRealDataCallBack(lPlayHandle int32, dwDataType uint32, pbuffer []byte, dwBufSize uint32, pUser interface{}) {
 	if dwDataType == 1 {
 		// 头数据
 		testVideoHeaderBytes = pbuffer

@@ -4,37 +4,6 @@ import (
 	"unsafe"
 )
 
-/*
- * 设备信息
- */
-type DeviceInfo struct {
-	UserId       int    // 登录Id
-	Ip           string // 设备ip
-	DeviceName   string // 设备名称
-	SerialNumber string // 设备序列号
-	MacAddr      string // 设备mac地址
-}
-
-func NewDeviceInfo(alarm *NetDvrAlarmer) *DeviceInfo {
-	d := new(DeviceInfo)
-	if alarm.ByUserIDValid == 1 {
-		d.UserId = int(alarm.LUserID)
-	}
-	if alarm.ByDeviceIPValid == 1 {
-		d.Ip = newString(alarm.SDeviceIP[:])
-	}
-	if alarm.ByDeviceNameValid == 1 {
-		d.DeviceName = newString(alarm.SDeviceName[:])
-	}
-	if alarm.BySerialValid == 1 {
-		d.SerialNumber = newString(alarm.SSerialNumber[:])
-	}
-	if alarm.ByMacAddrValid == 1 {
-		d.MacAddr = newString(alarm.ByMacAddr[:])
-	}
-	return d
-}
-
 /**
  * ISAPI协议透传响应结果
  */

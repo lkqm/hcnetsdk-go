@@ -89,7 +89,7 @@ func LastError() error {
 		cText := C.NET_DVR_GetErrorMsg(&cCode2)
 		text = C.GoString(cText)
 	}
-	return NewHcnetsdkError(int(cCode), text)
+	return NewHcnetError(int(cCode), text)
 }
 
 // 执行操作
@@ -103,10 +103,10 @@ func DoAction(ip string, port int, username string, password string, action func
 }
 
 // 设备布防
-func SetupDeploy(userId int, messageCallback MessageCallBack, exceptionCallback ExceptionCallBack) (int, error) {
+func SetupAlarm(userId int, messageCallback MessageCallBack, exceptionCallback ExceptionCallBack, data interface{}) (int, error) {
 	messageCallBackHooks[userId] = messageCallback
 	cUserId := C.LONG(userId)
-	cResult := C.NET_DVR_SetDVRMessageCallBack_V30(C.MSGCallBack(C.MSGCallBackCgo), nil)
+	cResult := C.NET_DVR_SetDVRMessageCallBack_V30(C.MSGCallBack(C.MSGCallBackCgo), unsafe.Pointer(&data))
 	if cResult != 1 {
 		return -1, LastError()
 	}
@@ -127,8 +127,17 @@ func SetupDeploy(userId int, messageCallback MessageCallBack, exceptionCallback 
 	return int(cHandle), nil
 }
 
+// 关闭报警布防
+func CloseAlarm(handle int) error {
+	cResult := C.NET_DVR_CloseAlarmChan_V30(C.LONG(handle))
+	if cResult != 1 {
+		return LastError()
+	}
+	return nil
+}
+
 // 视频实时播放
-func RealPlay(userId int, callback RealDataCallBack) (int, error) {
+func RealPlay(userId int, callback RealDataCallBack, data interface{}) (int, error) {
 	realDataCallBackHooks[userId] = callback
 
 	previewInfo := &C.NET_DVR_PREVIEWINFO{}
@@ -139,7 +148,10 @@ func RealPlay(userId int, callback RealDataCallBack) (int, error) {
 	previewInfo.bBlocked = C.DWORD(0)
 	previewInfo.bPassbackRecord = C.DWORD(0)
 	previewInfo.byPreviewMode = C.BYTE(0)
-	cHandle := C.NET_DVR_RealPlay_V40(C.LONG(userId), previewInfo, C.REALDATACALLBACK(C.FRealDataCallBackCgo), unsafe.Pointer(&userId))
+
+	// 自定义数据
+	userData := realDataCallBackDataWrapper{userId, data}
+	cHandle := C.NET_DVR_RealPlay_V40(C.LONG(userId), previewInfo, C.REALDATACALLBACK(C.FRealDataCallBackCgo), unsafe.Pointer(&userData))
 	if cHandle == -1 {
 		return 0, LastError()
 	}

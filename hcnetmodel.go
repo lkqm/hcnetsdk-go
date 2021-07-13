@@ -1,5 +1,9 @@
 package hcnetsdk
 
+import (
+	"time"
+)
+
 //
 // 保持go数据类型和c类型映射一致
 //
@@ -41,18 +45,40 @@ type NetDvrDate struct {
 	ByDay   byte
 }
 
+func (p *NetDvrDate) Time() time.Time {
+	return time.Date(int(p.WYear), time.Month(p.ByMonth), int(p.ByDay), 0, 0, 0, 0, time.UTC)
+}
+
 // 时间
 type NetDvrTimeV30 struct {
-	WYear            uint16
-	ByMonth          byte
-	ByDay            byte
-	ByHour           byte
-	ByMinute         byte
-	BySecond         byte
-	ByISO8601        byte
-	WMilliSec        uint16
-	CTimeDifferenceH uint8
-	CTimeDifferenceM uint8
+	WYear            uint16 // 年
+	ByMonth          byte   // 月
+	ByDay            byte   // 日
+	ByHour           byte   // 时
+	ByMinute         byte   // 分
+	BySecond         byte   // 秒
+	ByISO8601        byte   // 是否是8601的时间格式，即时差字段是否有效 0-时差无效，年月日时分秒为设备本地时间 1-时差有效
+	WMilliSec        uint16 // 毫秒
+	CTimeDifferenceH uint8  // 与UTC的时差（小时），-12 ... +14，+表示东区，byISO8601为1时有效
+	CTimeDifferenceM uint8  // 与UTC的时差（分钟），-30, 30, 45，+表示东区，byISO8601为1时有效
+}
+
+func (p *NetDvrTimeV30) Time() time.Time {
+	hour, minute := int(p.ByHour), int(p.ByMinute)
+	if p.ByISO8601 == 1 {
+		hour += int(p.CTimeDifferenceH)
+		minute += int(p.CTimeDifferenceM)
+	}
+	return time.Date(
+		int(p.WYear),
+		time.Month(p.ByMonth),
+		int(p.ByDay),
+		hour,
+		minute,
+		int(p.BySecond),
+		int(p.WMilliSec),
+		time.UTC,
+	)
 }
 
 //==================公共结束==================//
@@ -77,6 +103,39 @@ type NetDvrAlarmer struct {
 	SSocketIP         [128]byte
 	ByIpProtocol      byte
 	ByRes2            [11]byte
+}
+
+// 自定义易于使用的信息: NetDvrAlarmer
+type NetDvrAlarmerSimple struct {
+	UserId       int    // 当前登录句柄
+	SerialNumber string // 设备序列号
+	DeviceName   string // 设备名称
+	MacAddr      string // 设备Mac地址
+	DeviceIp     string // 设备Ip地址
+	SocketIp     string // 设备socket连接的Ip地址
+}
+
+func (p *NetDvrAlarmer) ToSimple() *NetDvrAlarmerSimple {
+	d := new(NetDvrAlarmerSimple)
+	if p.ByUserIDValid == 1 {
+		d.UserId = int(p.LUserID)
+	}
+	if p.ByDeviceIPValid == 1 {
+		d.DeviceIp = newString(p.SDeviceIP[:])
+	}
+	if p.ByDeviceNameValid == 1 {
+		d.DeviceName = newString(p.SDeviceName[:])
+	}
+	if p.BySerialValid == 1 {
+		d.SerialNumber = newString(p.SSerialNumber[:])
+	}
+	if p.ByMacAddrValid == 1 {
+		d.MacAddr = newString(p.ByMacAddr[:])
+	}
+	if p.BySocketIPValid == 1 {
+		d.SocketIp = newString(p.SSocketIP[:])
+	}
+	return d
 }
 
 // 人脸抓拍结果
@@ -174,4 +233,31 @@ type NetDvrIdCardInfo struct {
 	BySex              byte
 	ByNation           byte
 	ByRes              [101]byte
+}
+type NetDvrIdCardInfoSimple struct {
+	Name              string    // 姓名
+	Birth             time.Time // 生日
+	Address           string    // 住址
+	IdNumber          string    // 身份证号码
+	IssuingAuthority  string    // 签发机关
+	ValidityStartDate time.Time // 有效期开始时间
+	ValidityEndDate   time.Time // 有效期结束时间, 结束时间不存在长期有效
+	Sex               int       // 性别
+	Nation            int       // 民族
+}
+
+func (p *NetDvrIdCardInfo) ToSimple() *NetDvrIdCardInfoSimple {
+	card := new(NetDvrIdCardInfoSimple)
+	card.Name = newString(p.ByName[:])
+	card.Birth = p.StruBirth.Time()
+	card.Address = newString(p.ByAddr[:])
+	card.IdNumber = newString(p.ByIDNum[:])
+	card.IssuingAuthority = newString(p.ByIssuingAuthority[:])
+	card.ValidityStartDate = p.StruStartDate.Time()
+	if p.ByTermOfValidity == 1 {
+		card.ValidityEndDate = p.StruEndDate.Time()
+	}
+	card.Sex = int(p.BySex)
+	card.Nation = int(p.ByNation)
+	return card
 }
