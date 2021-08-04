@@ -6,6 +6,7 @@
 go get github.com/lkqm/hcnetsdk-go
 ```
 
+## 示例
 ```
 // Get Device Time
 func main() {

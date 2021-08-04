@@ -103,10 +103,10 @@ func DoAction(ip string, port int, username string, password string, action func
 }
 
 // 设备布防
-func SetupAlarm(userId int, messageCallback MessageCallBack, exceptionCallback ExceptionCallBack, data interface{}) (int, error) {
+func SetupAlarm(userId int, messageCallback MessageCallBack, exceptionCallback ExceptionCallBack, data unsafe.Pointer) (int, error) {
 	messageCallBackHooks[userId] = messageCallback
 	cUserId := C.LONG(userId)
-	cResult := C.NET_DVR_SetDVRMessageCallBack_V30(C.MSGCallBack(C.MSGCallBackCgo), unsafe.Pointer(&data))
+	cResult := C.NET_DVR_SetDVRMessageCallBack_V30(C.MSGCallBack(C.MSGCallBackCgo), data)
 	if cResult != 1 {
 		return -1, LastError()
 	}

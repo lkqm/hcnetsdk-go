@@ -16,17 +16,16 @@ import (
 
 var messageCallBackHooks = make(map[int]MessageCallBack)
 
-type MessageCallBack func(lCommand uint32, pAlarmer *NetDvrAlarmer, pAlarmInfo []byte, pUserData interface{}) int32
+type MessageCallBack func(lCommand uint32, pAlarmer *NetDvrAlarmer, pAlarmInfo []byte, pUserData unsafe.Pointer) int32
 
 //export fMSGCallBackGo
 func fMSGCallBackGo(lCommand C.LONG, pAlarmer C.LPNET_DVR_ALARMER, pAlarmInfo *C.char, dwBufLen C.DWORD, pUser unsafe.Pointer) C.BOOL {
 	userId := int(pAlarmer.lUserID)
 	callback := messageCallBackHooks[userId]
 	if callback != nil {
-		userData := *(*callBackDataWrapper)(pUser)
 		alarmer := (*NetDvrAlarmer)(unsafe.Pointer(pAlarmer))
 		buffer := C.GoBytes(unsafe.Pointer(pAlarmInfo), C.int(dwBufLen))
-		return C.BOOL(callback(uint32(lCommand), alarmer, buffer, userData))
+		return C.BOOL(callback(uint32(lCommand), alarmer, buffer, pUser))
 	}
 	return C.BOOL(1)
 }
@@ -65,8 +64,4 @@ func fRealDataCallBackGo(lPlayHandle C.LONG, dwDataType C.DWORD, pBuffer *C.BYTE
 type realDataCallBackDataWrapper struct {
 	UserId int         // 用户登录句柄
 	Data   interface{} // 传递数据
-}
-
-type callBackDataWrapper struct {
-	Data interface{} // 传递数据
 }

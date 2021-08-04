@@ -8,6 +8,7 @@ import (
 	"os"
 	"testing"
 	"time"
+	"unsafe"
 )
 
 func TestLogin(t *testing.T) {
@@ -53,7 +54,7 @@ func TestSetupAlarm(t *testing.T) {
 	if err != nil {
 		return
 	}
-	handle, err := SetupAlarm(userId, testMessageCallBack, testExceptionCallBack, 1)
+	handle, err := SetupAlarm(userId, testMessageCallBack, testExceptionCallBack, nil)
 	if err != nil {
 		t.Errorf("布防失败：%s", err)
 		return
@@ -65,7 +66,7 @@ func TestSetupAlarm(t *testing.T) {
 	time.Sleep(120 * time.Second)
 }
 
-func testMessageCallBack(lCommand uint32, pAlarmer *NetDvrAlarmer, pAlarmInfo []byte, pUserData interface{}) int32 {
+func testMessageCallBack(lCommand uint32, pAlarmer *NetDvrAlarmer, pAlarmInfo []byte, pUserData unsafe.Pointer) int32 {
 	if lCommand == 4370 {
 		print(pAlarmer)
 	}
